@@ -1,2 +1,32 @@
-# stellar-burgers-api-tests
-API automated tests for Stellar Burgers using Python, Pytest, Requests and Allure. Yandex Practicum diploma project.
+# Задание 2 — API Stellar Burgers
+
+Стек: pytest, requests, allure-pytest. Всего 17 запусков.
+
+- Регистрация: уникальный пользователь; дубликат; отсутствие и пустое значение каждого
+  из трёх обязательных полей (email, password, name).
+- Логин: существующий пользователь; неверный email; неверный пароль; оба неверные.
+- Заказ: с авторизацией/ингредиентами; без авторизации; пустой список ингредиентов;
+  отсутствие поля ingredients; неверный хеш.
+
+API-клиент в `clients/`; endpoint-пути централизованы в нём. Тесты разделены по функциональности.
+Данные пользователя уникальны (uuid); fixtures удаляют созданные аккаунты после тестов,
+включая падение assert. Ошибка очистки не скрывается. Созданные заказы не удаляются:
+метода удаления заказа в предоставленной документации нет.
+Ингредиенты берутся через API, хеши существующих ингредиентов не зашиты в код.
+HTTP-запросы и ответы прикладываются к Allure, токены и пароли маскируются в HTTP-вложениях.
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest --clean-alluredir
+allure generate allure-results --clean -o allure-report
+allure open allure-report
+```
+
+URL по умолчанию https://stellarburgers.education-services.ru.
+Для другого стенда перед запуском: `$env:BASE_URL = "https://адрес-стенда"`.
+
+Прогон при подготовке: **16 passed, 1 failed**. См. KNOWN_ISSUES.md.
+Тест без авторизации не помечен skip/xfail; он честно показывает расхождение.
+Allure-файлы в архиве относятся к этому реальному прогону, не к будущему прогону на твоём ПК.
+Ветка для сдачи: develop2, отдельный репозиторий и PR.
