@@ -2,6 +2,9 @@ from uuid import uuid4
 import allure
 import pytest
 
+UNREGISTERED_EMAIL = f'unregistered.{uuid4().hex}@example.com'
+
+
 @allure.feature('Логин пользователя')
 class TestLogin:
     @allure.title('Вход с email и паролем зарегистрированного пользователя')
@@ -15,14 +18,21 @@ class TestLogin:
         assert body['accessToken'].startswith('Bearer ')
         assert body['refreshToken']
 
-    @pytest.mark.parametrize('wrong_field', ['email', 'password', 'both'])
-    @allure.title('Вход: неверные учётные данные — {wrong_field}')
-    def test_wrong_credentials(self, api, registered_user, wrong_field):
+    @pytest.mark.parametrize(
+        'incorrect_fields',
+        [
+            pytest.param({'email': UNREGISTERED_EMAIL}, id='email'),
+            pytest.param({'password': 'WrongPassword!654321'}, id='password'),
+            pytest.param({
+                'email': UNREGISTERED_EMAIL,
+                'password': 'WrongPassword!654321',
+            }, id='both'),
+        ],
+    )
+    @allure.title('Вход: неверные учётные данные')
+    def test_wrong_credentials(self, api, registered_user, incorrect_fields):
         payload = {key: registered_user[key] for key in ('email', 'password')}
-        if wrong_field in ('email', 'both'):
-            payload['email'] = f'absent.{uuid4().hex}@example.com'
-        if wrong_field in ('password', 'both'):
-            payload['password'] = 'WrongPassword!654321'
+        payload.update(incorrect_fields)
         response = api.login(payload)
         assert response.status_code == 401
         assert response.json() == {'success': False, 'message': 'email or password are incorrect'}
